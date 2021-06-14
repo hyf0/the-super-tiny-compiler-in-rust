@@ -1,3 +1,5 @@
+static INPUT: &str = "(add 2 (subtract 4 2))";
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -5,7 +7,6 @@ mod tests {
     #[test]
     fn tokenizer_test() {
         use crate::Token::*;
-        let input = "(add 2 (subtract 4 2))";
         let tokens = vec![
             ParenLeft,
             Name("add".to_string()),
@@ -17,6 +18,24 @@ mod tests {
             ParenRight,
             ParenRight,
         ];
-        assert_eq!(tokenizer(input), tokens);
+        assert_eq!(tokenizer(super::INPUT), tokens);
+    }
+    #[test]
+    fn parser_test() {
+        use crate::Node::*;
+        let right = Program(vec![Box::new(CallExpression {
+            name: "add".to_string(),
+            params: vec![
+                Box::new(NumberLiteral("2".to_string())),
+                Box::new(CallExpression {
+                    name: "subtract".to_string(),
+                    params: vec![
+                        Box::new(NumberLiteral("4".to_string())),
+                        Box::new(NumberLiteral("2".to_string())),
+                    ],
+                }),
+            ],
+        })]);
+        assert_eq!(parser(&tokenizer(super::INPUT)), right);
     }
 }

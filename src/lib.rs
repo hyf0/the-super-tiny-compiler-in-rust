@@ -52,7 +52,63 @@ pub fn tokenizer(input: &str) -> Vec<Token> {
     }
     tokens
 }
-pub fn parser() {}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum Node {
+    Program(Vec<Box<Node>>),
+    CallExpression {
+        name: String,
+        params: Vec<Box<Node>>,
+    },
+    NumberLiteral(String),
+}
+
+pub fn parser(tokens: &Vec<Token>) -> Node {
+    fn walk(tokens: &Vec<Token>, current: &mut usize) -> Node {
+        use Node::*;
+        use Token::*;
+        let token = &tokens[*current];
+        println!("token: {:?}, {}", token, current);
+        let node = match token {
+            Number(value) => NumberLiteral(value.clone()),
+            ParenLeft => {
+                *current += 1;
+                let node = if let &Name(ref token_name) = &tokens[*current] {
+                    *current += 1;
+                    let mut params: Vec<Box<Node>> = Vec::new();
+                    while *current < tokens.len() {
+                        let token = &tokens[*current];
+                        if let ParenRight = token {
+                            *current += 1;
+                            break;
+                        } else {
+                            params.push(Box::new(walk(&tokens, current)));
+                        }
+                        *current += 1;
+                    }
+                    CallExpression {
+                        name: token_name.clone(),
+                        params,
+                    }
+                } else {
+                    panic!("`(` must follow with a Name");
+                };
+                node
+            }
+            unexpected_token => panic!("Type Error {:?}", unexpected_token),
+        };
+        node
+    }
+
+    let mut body: Vec<Box<Node>> = Vec::new();
+    let mut current: usize = 0;
+
+    while current < tokens.len() {
+        body.push(Box::new(walk(&tokens, &mut current)));
+    }
+    let program = Node::Program(body);
+    program
+}
 pub fn traverser() {}
 pub fn transformer() {}
 pub fn code_generator() {}
