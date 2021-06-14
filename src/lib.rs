@@ -1,4 +1,3 @@
-
 mod test;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -9,27 +8,21 @@ pub enum Token {
     Number(String),
 }
 
-
 pub fn tokenizer(input: &str) -> Vec<Token> {
     let input = input.chars().collect::<Vec<char>>();
     let mut tokens = vec![];
     let mut current = 0;
     let input_len = input.len();
-    while current < input_len {
+    while let Some(&char) = input.get(current) {
         use Token::*;
-        let char = input[current];
         match char {
             '(' => tokens.push(ParenLeft),
             ')' => tokens.push(ParenRight),
             ' ' => {}
             '1'..='9' => {
                 let mut num_str = String::new();
-                while current < input_len {
-                    if let num_like @ '0'..='9' = input[current] {
-                        num_str.push(num_like);
-                    } else {
-                        break;
-                    }
+                while let Some(&num_like @ '0'..='9') = input.get(current) {
+                    num_str.push(num_like);
                     current += 1;
                 }
                 tokens.push(Number(num_str));
@@ -37,6 +30,9 @@ pub fn tokenizer(input: &str) -> Vec<Token> {
             }
             'a'..='z' | 'A'..='Z' => {
                 let mut name = String::new();
+                // or-patterns syntax is experimental
+                // while let Some(&char @ 'a'..='z' | &char @ 'A'..='Z') = input.get(current) {
+                // }
                 while current < input_len {
                     match input[current] {
                         'a'..='z' | 'A'..='Z' => {
