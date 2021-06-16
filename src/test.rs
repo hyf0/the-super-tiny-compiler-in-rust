@@ -22,20 +22,18 @@ mod tests {
     }
     #[test]
     fn parser_test() {
-        use crate::Node::*;
-        let right = Program(vec![Box::new(CallExpression {
-            name: "add".to_string(),
-            params: vec![
-                Box::new(NumberLiteral("2".to_string())),
-                Box::new(CallExpression {
-                    name: "subtract".to_string(),
-                    params: vec![
-                        Box::new(NumberLiteral("4".to_string())),
-                        Box::new(NumberLiteral("2".to_string())),
-                    ],
-                }),
-            ],
-        })]);
+        let right = {
+            use crate::ast::Node;
+            Node::new_program(vec![
+                Node::new_call_expression("add".to_owned(), vec![
+                    Node::new_number_literal("2".to_string()),
+                    Node::new_call_expression("subtract".to_owned(), vec![
+                        Node::new_number_literal("4".to_owned()),
+                        Node::new_number_literal("2".to_owned()),
+                    ])
+                ]),
+            ])
+        };
         assert_eq!(parser(&tokenizer(super::INPUT)), right);
     }
 }

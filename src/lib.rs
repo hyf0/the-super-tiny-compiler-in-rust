@@ -46,50 +46,75 @@ pub fn tokenizer(input: &str) -> Vec<Token> {
                 tokens.push(Name(name));
                 continue;
             }
-            _ => panic!("I dont know what this character is: {}", char),
+            _ => panic!("I don't know what this character is: {}", char),
         }
         current += 1;
     }
     tokens
 }
 
-#[derive(PartialEq, Eq, Debug)]
-pub enum Node {
-    Program(Vec<Box<Node>>),
-    CallExpression {
-        name: String,
-        params: Vec<Box<Node>>,
-    },
-    NumberLiteral(String),
+pub mod ast {
+    #[derive(PartialEq, Eq, Debug)]
+    pub struct Program {
+        pub body: Vec<Node>
+    }
+
+    #[derive(PartialEq, Eq, Debug)]
+    pub struct CallExpression {
+        pub name: String,
+        pub params: Vec<Node>,
+    }
+    #[derive(PartialEq, Eq, Debug)]
+    pub struct NumberLiteral {
+        pub value: String
+    }
+
+    #[derive(PartialEq, Eq, Debug)]
+    pub enum Node {
+        Program(Program),
+        CallExpression(CallExpression),
+        NumberLiteral(NumberLiteral),
+    }
+
+    impl Node {
+        pub fn new_program(body: Vec<Node>) -> Node {
+            Node::Program(Program{ body })
+        }
+        pub fn new_call_expression(name: String, params: Vec<Node>) -> Node {
+            Node::CallExpression(CallExpression { name, params })
+        }
+        pub fn new_number_literal(value: String) -> Node {
+            Node::NumberLiteral(NumberLiteral{ value })
+        }
+
+    }
+
 }
 
-pub fn parser(tokens: &Vec<Token>) -> Node {
-    fn walk(tokens: &Vec<Token>, current: &mut usize) -> Node {
-        use Node::*;
+
+pub fn parser(tokens: &Vec<Token>) -> ast::Node {
+    use ast::Node;
+    fn walk(tokens: &Vec<Token>, current: &mut usize) -> ast::Node {
         use Token::*;
         let token = &tokens[*current];
-        println!("token: {:?}, {}", token, current);
         let node = match token {
-            Number(value) => NumberLiteral(value.clone()),
+            Number(value) => Node::new_number_literal(value.clone()),
             ParenLeft => {
                 *current += 1;
                 let node = if let &Name(ref token_name) = &tokens[*current] {
                     *current += 1;
-                    let mut params: Vec<Box<Node>> = Vec::new();
+                    let mut params: Vec<ast::Node> = Vec::new();
                     while *current < tokens.len() {
                         let token = &tokens[*current];
                         if let ParenRight = token {
                             *current += 1;
                             break;
                         } else {
-                            params.push(Box::new(walk(&tokens, current)));
+                            params.push(walk(&tokens, current));
                         }
                         *current += 1;
                     }
-                    CallExpression {
-                        name: token_name.clone(),
-                        params,
-                    }
+                    Node::new_call_expression(token_name.clone(), params)
                 } else {
                     panic!("`(` must follow with a Name");
                 };
@@ -99,17 +124,42 @@ pub fn parser(tokens: &Vec<Token>) -> Node {
         };
         node
     }
-
-    let mut body: Vec<Box<Node>> = Vec::new();
+    let mut body: Vec<ast::Node> = Vec::new();
     let mut current: usize = 0;
 
     while current < tokens.len() {
-        body.push(Box::new(walk(&tokens, &mut current)));
+        body.push(walk(&tokens, &mut current));
     }
-    let program = Node::Program(body);
+    let program = Node::new_program(body);
     program
 }
-pub fn traverser() {}
+
+
+pub trait Visitor {
+    fn enter_program(_n: &mut ast::Program) {
+
+    }
+    fn leave_program(_n: &mut ast::Program) {
+
+    }
+    fn enter_call_expression(_n: &mut ast::CallExpression) {
+
+    }
+    fn leave_call_expression(_n: &mut ast::CallExpression) {
+
+    }
+    fn enter_number_literal(_n: &mut ast::NumberLiteral) {
+
+    }
+    fn leave_number_literal(_n: &mut ast::NumberLiteral) {
+
+    }
+}
+
+pub fn traverser(ast: &ast::Node, visitor: impl Visitor) -> !{
+    panic!("to be impl")
+}
+
 pub fn transformer() {}
 pub fn code_generator() {}
 pub fn compiler() {}
