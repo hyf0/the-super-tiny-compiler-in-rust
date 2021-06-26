@@ -115,12 +115,34 @@ pub mod ast {
         pub trait Visitor {
             fn enter_program(&mut self, _node: &super::Program) {}
             fn exit_program(&mut self, _node: &super::Program) {}
-            fn enter_call_expression(&mut self, _node: &super::CallExpression, _parent: &super::Node) {}
-            fn exit_call_expression(&mut self, _node: &super::CallExpression, _parent: &super::Node) {}
-            fn enter_number_literal(&mut self, _node: &super::NumberLiteral, _parent: &super::Node) {}
-            fn exit_number_literal(&mut self, _node: &super::NumberLiteral, _parent: &super::Node) {}
-            fn enter_string_literal(&mut self, _node: &super::StringLiteral, _parent: &super::Node) {}
-            fn exit_string_literal(&mut self, _node: &super::StringLiteral, _parent: &super::Node) {}
+            fn enter_call_expression(
+                &mut self,
+                _node: &super::CallExpression,
+                _parent: &super::Node,
+            ) {
+            }
+            fn exit_call_expression(
+                &mut self,
+                _node: &super::CallExpression,
+                _parent: &super::Node,
+            ) {
+            }
+            fn enter_number_literal(
+                &mut self,
+                _node: &super::NumberLiteral,
+                _parent: &super::Node,
+            ) {
+            }
+            fn exit_number_literal(&mut self, _node: &super::NumberLiteral, _parent: &super::Node) {
+            }
+            fn enter_string_literal(
+                &mut self,
+                _node: &super::StringLiteral,
+                _parent: &super::Node,
+            ) {
+            }
+            fn exit_string_literal(&mut self, _node: &super::StringLiteral, _parent: &super::Node) {
+            }
         }
     }
 }
@@ -170,7 +192,11 @@ pub fn parser(tokens: &Vec<Token>) -> ast::Node {
 
 pub fn traverser(ast: &ast::Node, visitor: &mut impl ast::visit::Visitor) {
     use ast::Node;
-    fn traverser_node(visitor: &mut impl ast::visit::Visitor, node_to_be_match: &Node, parent: Option<&Node>) {
+    fn traverser_node(
+        visitor: &mut impl ast::visit::Visitor,
+        node_to_be_match: &Node,
+        parent: Option<&Node>,
+    ) {
         match node_to_be_match {
             n @ Node::Program(_) => {
                 if let Node::Program(p) = n {
@@ -202,7 +228,11 @@ pub fn traverser(ast: &ast::Node, visitor: &mut impl ast::visit::Visitor) {
         }
     }
 
-    fn traverser_vec(visitor: &mut impl ast::visit::Visitor, vec: &Vec<Node>, parent: Option<&ast::Node>) {
+    fn traverser_vec(
+        visitor: &mut impl ast::visit::Visitor,
+        vec: &Vec<Node>,
+        parent: Option<&ast::Node>,
+    ) {
         vec.iter()
             .for_each(|node| traverser_node(visitor, node, parent))
     }
@@ -210,35 +240,35 @@ pub fn traverser(ast: &ast::Node, visitor: &mut impl ast::visit::Visitor) {
 }
 
 pub mod ast_new {
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub struct Program {
         pub body: Vec<Node>,
     }
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub struct Identifier {
         pub name: String,
     }
 
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub struct CallExpression {
         pub callee: Identifier,
         pub arguments: Vec<Node>,
     }
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub struct ExpressionStatement {
         pub expression: CallExpression,
     }
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub struct NumberLiteral {
         pub value: String,
     }
 
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub struct StringLiteral {
         pub value: String,
     }
 
-    #[derive(PartialEq, Eq, Debug)]
+    #[derive(PartialEq, Eq, Debug, Clone)]
     pub enum Node {
         Program(Program),
         Identifier(Identifier),
@@ -248,7 +278,6 @@ pub mod ast_new {
         StringLiteral(StringLiteral),
     }
 
-
     impl Node {
         pub fn new_program(body: Vec<Node>) -> Node {
             Node::Program(Program { body })
@@ -257,10 +286,7 @@ pub mod ast_new {
             Node::Identifier(Identifier { name })
         }
         pub fn new_call_expression(callee: Identifier, arguments: Vec<Node>) -> Node {
-            Node::CallExpression(CallExpression {
-                callee,
-                arguments,
-            })
+            Node::CallExpression(CallExpression { callee, arguments })
         }
         pub fn new_expression_statement(expression: CallExpression) -> Node {
             Node::ExpressionStatement(ExpressionStatement { expression })
@@ -273,7 +299,7 @@ pub mod ast_new {
         }
 
         pub fn unwrap_program(self) -> Program {
-            if let  Node::Program(p) = self {
+            if let Node::Program(p) = self {
                 p
             } else {
                 panic!("ops!");
@@ -282,7 +308,7 @@ pub mod ast_new {
     }
 }
 
-pub fn transformer(ast: &mut ast::Node) -> ast_new::Program {
+pub fn transformer(ast: &mut ast::Node) -> ast_new::Node {
     #[derive(PartialEq, Eq, Debug)]
     struct State {
         pub stack: Vec<ast_new::Node>,
@@ -298,8 +324,13 @@ pub fn transformer(ast: &mut ast::Node) -> ast_new::Program {
         }
         fn enter_call_expression(&mut self, node: &ast::CallExpression, parent: &ast::Node) {
             println!("enter_call_expression _parent: {:?}", parent);
-            let id = ast_new::Identifier { name: node.name.clone() };
-            let exp = ast_new::CallExpression{ callee: id, arguments: vec![], };
+            let id = ast_new::Identifier {
+                name: node.name.clone(),
+            };
+            let exp = ast_new::CallExpression {
+                callee: id,
+                arguments: vec![],
+            };
             if let ast::Node::CallExpression(_) = parent {
                 self.stack.push(ast_new::Node::CallExpression(exp));
             } else {
@@ -342,12 +373,38 @@ pub fn transformer(ast: &mut ast::Node) -> ast_new::Program {
                 p.body = collected;
                 collected = vec![Node::Program(p)];
             }
-            _node => panic!("unexpected {:?}", _node)
-
+            _node => panic!("unexpected {:?}", _node),
         }
     }
     println!("collected: {:?}\n", collected);
-    collected.pop().unwrap().unwrap_program()
+    collected.pop().unwrap()
 }
-pub fn code_generator() {}
+pub fn code_generator(node: &ast_new::Node) -> String {
+    use ast_new::Node;
+    match node {
+        Node::Program(p) => p
+            .body
+            .iter()
+            .map(|node| code_generator(node))
+            .collect::<Vec<String>>()
+            .join("\n"),
+        Node::ExpressionStatement(es) => {
+            code_generator(&Node::CallExpression(es.expression.clone())) + ";"
+        }
+        Node::CallExpression(c) => {
+            code_generator(&Node::Identifier(c.callee.clone()))
+                + "("
+                + &c.arguments
+                    .iter()
+                    .map(|node| code_generator(node))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+                + ")"
+        }
+        Node::Identifier(id) => id.name.clone(),
+        Node::NumberLiteral(n) => n.value.clone(),
+        Node::StringLiteral(s) => "\"".to_owned() + &s.value + "\"",
+
+    }
+}
 pub fn compiler() {}

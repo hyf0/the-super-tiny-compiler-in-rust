@@ -43,23 +43,30 @@ mod tests {
     #[test]
     fn transformer_test() {
         use crate::ast_new::{Node};
-        let right = ast_new::Program { body: vec![
-            Node::new_expression_statement(ast_new::CallExpression {
-                callee: ast_new::Identifier { name: "add".to_string() },
-                arguments: vec![
-                    Node::new_number_literal("2".to_owned()),
-                    Node::new_call_expression(
-                        ast_new::Identifier { name: "subtract".to_owned() },
-                        vec![
-                            Node::new_number_literal("4".to_owned()),
-                            Node::new_number_literal("2".to_owned()),
-                        ],
-                    ),
-                ],
-            })
-        ] };
+        let right = Node::new_program(vec![
+          Node::new_expression_statement(ast_new::CallExpression {
+              callee: ast_new::Identifier { name: "add".to_string() },
+              arguments: vec![
+                  Node::new_number_literal("2".to_owned()),
+                  Node::new_call_expression(
+                      ast_new::Identifier { name: "subtract".to_owned() },
+                      vec![
+                          Node::new_number_literal("4".to_owned()),
+                          Node::new_number_literal("2".to_owned()),
+                      ],
+                  ),
+              ],
+          })
+      ]);
         println!("{:?}", transformer(&mut parser(&tokenizer(super::INPUT))));
         assert_eq!(transformer(&mut parser(&tokenizer(super::INPUT))), right);
+        // transformer( tokens);
+    }
+
+    #[test]
+    fn code_generator_test() {
+        let right = "add(2, subtract(4, 2));".to_owned();
+        assert_eq!(code_generator(&transformer(&mut parser(&tokenizer(super::INPUT)))), right);
         // transformer( tokens);
     }
 }
