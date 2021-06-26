@@ -308,7 +308,7 @@ pub mod ast_new {
     }
 }
 
-pub fn transformer(ast: &mut ast::Node) -> ast_new::Node {
+pub fn transformer(ast: &ast::Node) -> ast_new::Node {
     #[derive(PartialEq, Eq, Debug)]
     struct State {
         pub stack: Vec<ast_new::Node>,
@@ -407,4 +407,10 @@ pub fn code_generator(node: &ast_new::Node) -> String {
 
     }
 }
-pub fn compiler() {}
+pub fn compiler(input: &str) -> String {
+    let tokens = tokenizer(input);
+    let ast    = parser(&tokens);
+    let new_ast = transformer(&ast);
+    let output = code_generator(&new_ast);
+    output
+}

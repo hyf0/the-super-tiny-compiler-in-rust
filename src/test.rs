@@ -69,4 +69,10 @@ mod tests {
         assert_eq!(code_generator(&transformer(&mut parser(&tokenizer(super::INPUT)))), right);
         // transformer( tokens);
     }
+
+    #[test]
+    fn compiler_test() {
+        let right = "add(2, subtract(4, 2));".to_owned();
+        assert_eq!(compiler(&super::INPUT), right);
+    }
 }
